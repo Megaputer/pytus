@@ -23,12 +23,9 @@ class TusError(Exception):
     def __str__(self):
         if self.response is not None:
             text = self.response.text
-            return "TusError('%s', response=(%s, '%s'))" % (
-                    self._message,
-                    self.response.status_code,
-                    text.strip())
+            return f"TusError('{self._message}', response=({self.response.status_code}, '{text.strip()}'))"
         else:
-            return "TusError('%s')" % self._message
+            return f"TusError('{self._message}')"
 
 
 def _init():
@@ -116,7 +113,7 @@ def create(tus_endpoint, file_name, file_size, headers=None, metadata=None):
         raise TusError("Create failed", response=response)
 
     location = response.headers["Location"]
-    logger.info("Created: %s", location)
+    logger.info(f"Created: {location}")
     return _absolute_file_location(tus_endpoint, location)
 
 
@@ -140,7 +137,7 @@ def resume(file_obj,
     while data:
         _upload_chunk(data, offset, file_endpoint, headers=headers)
         total_sent += len(data)
-        logger.info("Total bytes sent: %i", total_sent)
+        logger.info(f"Total bytes sent: {total_sent}")
         offset += len(data)
         data = file_obj.read(chunk_size)
 
@@ -166,12 +163,12 @@ def _get_offset(file_endpoint, headers=None):
     response.raise_for_status()
 
     offset = int(response.headers["Upload-Offset"])
-    logger.info("offset=%i", offset)
+    logger.info(f"offset={offset}")
     return offset
 
 
 def _upload_chunk(data, offset, file_endpoint, headers=None):
-    logger.info("Uploading %d bytes chunk from offset: %i", len(data), offset)
+    logger.info(f"Uploading {len(data)} bytes chunk from offset: {offset}")
 
     h = {
         'Content-Type': 'application/offset+octet-stream',
