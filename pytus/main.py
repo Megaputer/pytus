@@ -2,7 +2,6 @@ from __future__ import print_function
 import os
 import base64
 import logging
-import argparse
 import sys
 
 try:
@@ -43,85 +42,6 @@ def _init():
     h.setLevel(LOG_LEVEL)
     h.setFormatter(logging.Formatter(fmt))
     logger.addHandler(h)
-
-
-class DictAction(argparse.Action):
-    def __init__(self, option_strings, dest, **kwargs):
-        super(DictAction, self).__init__(
-            option_strings, dest, nargs=2, **kwargs)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        key, value = values[0], values[1]
-        d = getattr(namespace, self.dest)
-        if d is None:
-            setattr(namespace, self.dest, {})
-        d = getattr(namespace, self.dest)
-        d[key] = value
-
-
-def _create_parent_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('file', type=argparse.FileType('rb'))
-    parser.add_argument('--chunk-size', type=int, default=DEFAULT_CHUNK_SIZE)
-    parser.add_argument(
-        '--header',
-        dest='headers',
-        action=DictAction,
-        help="A single key/value pair as 2 arguments"
-        " to be sent as HTTP header."
-        " Can be specified multiple times to send multiple headers.")
-    return parser
-
-
-def _cmd_upload():
-    _init()
-
-    parser = _create_parent_parser()
-    parser.add_argument('tus_endpoint')
-    parser.add_argument(
-        '--file_name',
-        help="Override uploaded file name."
-        "Inferred from local file name if not specified.")
-    parser.add_argument(
-        '--metadata',
-        action=DictAction,
-        help="A single key/value pair as 2 arguments"
-        " to be sent in Upload-Metadata header."
-        " Can be specified multiple times to send more than one pair.")
-    args = parser.parse_args()
-
-    file_name = args.file_name or os.path.basename(args.file.name)
-    file_size = _get_file_size(args.file)
-
-    file_endpoint = create(
-        args.tus_endpoint,
-        file_name,
-        file_size,
-        headers=args.headers,
-        metadata=args.metadata)
-
-    print(file_endpoint)
-
-    resume(
-        args.file,
-        file_endpoint,
-        chunk_size=args.chunk_size,
-        headers=args.headers,
-        offset=0)
-
-
-def _cmd_resume():
-    _init()
-
-    parser = _create_parent_parser()
-    parser.add_argument('file_endpoint')
-    args = parser.parse_args()
-
-    resume(
-        args.file,
-        args.file_endpoint,
-        chunk_size=args.chunk_size,
-        headers=args.headers)
 
 
 def upload(file_obj,
