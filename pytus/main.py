@@ -1,13 +1,7 @@
-from __future__ import print_function
-import os
 import base64
 import logging
-import sys
-
-try:
-    from urllib.parse import urlparse, urlunparse
-except ImportError:
-    from urlparse import urlparse, urlunparse  # type: ignore
+import os
+from urllib.parse import urlparse, urlunparse
 
 import requests
 
@@ -70,7 +64,7 @@ def upload(file_obj,
 
 
 def _get_file_size(f):
-    if not _is_seekable(f):
+    if not f.seekable():
         return
 
     pos = f.tell()
@@ -78,13 +72,6 @@ def _get_file_size(f):
     size = f.tell()
     f.seek(pos)
     return size
-
-
-def _is_seekable(f):
-    if sys.version_info.major == 2:
-        return hasattr(f, 'seek')
-    else:
-        return f.seekable()
 
 
 def _absolute_file_location(tus_endpoint, file_endpoint):
@@ -142,7 +129,7 @@ def resume(file_obj,
         offset = _get_offset(file_endpoint, headers=headers)
 
     if offset != 0:
-        if not _is_seekable(file_obj):
+        if not file_obj.seekable():
             raise Exception("file is not seekable")
 
         file_obj.seek(offset)
@@ -156,7 +143,7 @@ def resume(file_obj,
         offset += len(data)
         data = file_obj.read(chunk_size)
 
-    if not _is_seekable(file_obj):
+    if not file_obj.seekable():
         if headers is None:
             headers = {}
         else:
