@@ -18,16 +18,17 @@ class TusError(Exception):
     def __init__(self, message, response=None):
         super(TusError, self).__init__(message)
         self.response = response
+        self._message = message
 
     def __str__(self):
         if self.response is not None:
             text = self.response.text
             return "TusError('%s', response=(%s, '%s'))" % (
-                    self.message,
+                    self._message,
                     self.response.status_code,
                     text.strip())
         else:
-            return "TusError('%s')" % self.message
+            return "TusError('%s')" % self._message
 
 
 def _init():
