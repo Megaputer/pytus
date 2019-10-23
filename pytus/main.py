@@ -50,7 +50,7 @@ def upload(file_obj,
     if not session:
         session = requests
 
-    file_endpoint = create(
+    file_endpoint, extensions = create(
         tus_endpoint,
         file_name,
         file_size,
@@ -65,6 +65,19 @@ def upload(file_obj,
         chunk_size=chunk_size,
         headers=headers,
         offset=0)
+
+    if 'termination' in extensions:
+        terminate(file_endpoint, session)
+
+
+def terminate(file_endpoint, session):
+    logger.info("Sending termination")
+
+    h = {"Tus-Resumable": TUS_VERSION}
+
+    response = session.delete(file_endpoint, headers=h)
+    if response.status_code != 204:
+        raise TusError("Termination failed", response=response)
 
 
 def _get_file_size(f):
@@ -118,9 +131,14 @@ def create(tus_endpoint, file_name, file_size, session, headers=None, metadata=N
     if response.status_code != 201:
         raise TusError("Create failed", response=response)
 
+    _exts = response.headers.get('Tus-Extension')
+    extensions = []
+    if _exts:
+        extensions = [x.strip() for x in _exts.split(',')]
+
     location = response.headers["Location"]
     logger.info(f"Created: {location}")
-    return _absolute_file_location(tus_endpoint, location)
+    return _absolute_file_location(tus_endpoint, location), extensions
 
 
 def resume(file_obj,
