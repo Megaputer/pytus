@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytus"
-version = "0.1.0"
+version = "0.2.0"
 description = "yet another tus (resumable file upload protocol) client in python"
 authors = ["yatmanov <yatmanov@megaputer.ru>"]
 license = "MIT"
