@@ -66,9 +66,6 @@ def upload(file_obj,
         headers=headers,
         offset=0)
 
-    if 'termination' in extensions:
-        terminate(file_endpoint, session)
-
 
 def terminate(file_endpoint, session):
     logger.info("Sending termination")
